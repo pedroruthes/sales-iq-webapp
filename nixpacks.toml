@@ -1,0 +1,6 @@
+# Garante processo Node com proxy /api (evita deploy “static” que quebra o Sync Agent)
+[phases.build]
+cmds = ["npm ci", "npm run build"]
+
+[start]
+cmd = "npm run start"

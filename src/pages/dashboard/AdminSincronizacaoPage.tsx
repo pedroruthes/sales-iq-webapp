@@ -163,8 +163,17 @@ export default function SincronizacaoPage() {
       showToast(`${r.data.message}. O agente aplica em até ~20 min.`)
       carregar()
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { error?: string } } }
-      showToast(err?.response?.data?.error ?? 'Falha na operação', 'err')
+      const err = e as { response?: { data?: { error?: string }; status?: number }; message?: string }
+      const detalhe = err?.response?.data?.error
+      showToast(
+        detalhe
+          || (err?.response?.status === 405
+            ? 'API não alcançável neste domínio (proxy /api ausente) — use o backend em api.salesiq.app.br'
+            : null)
+          || err?.message
+          || 'Falha na operação',
+        'err'
+      )
     } finally {
       setExecutando(null)
     }

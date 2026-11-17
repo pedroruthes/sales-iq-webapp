@@ -18,15 +18,33 @@ O `Dockerfile` deste repo sobe um **nginx** que:
 1. Serve o SPA
 2. Faz proxy de `/api/` (e `/health`) para `BACKEND_UPSTREAM` (padrão `https://api.salesiq.app.br`)
 
-## Build
+## Build (obrigatório: processo com proxy `/api`)
+
+Se o Coolify publicar só a pasta `dist` (static), **o Sync Agent fica offline de novo**.
+Use uma destas opções:
+
+### Opção A — Dockerfile (recomendado)
 
 | Campo | Valor |
 | --- | --- |
 | Build pack | **Dockerfile** |
 | Base directory | `/` (repo só do webapp) ou `sales-iq-webapp` no monorepo |
 | Dockerfile | `/Dockerfile` |
-| Exposed port | `80` |
+| Exposed port | **`3000`** |
 | Domínio | `https://salesiq.app.br` (+ `www` se quiser) |
+| Env | `BACKEND_UPSTREAM=https://api.salesiq.app.br` |
+
+### Opção B — Nixpacks / Node
+
+| Campo | Valor |
+| --- | --- |
+| Build pack | **Nixpacks** (não Static) |
+| Build command | `npm ci && npm run build` |
+| Start command | `npm run start` (= `node server.mjs`) |
+| Exposed port | **`3000`** |
+| Env | `BACKEND_UPSTREAM=https://api.salesiq.app.br` |
+
+Há `nixpacks.toml` e `Procfile` no repo para forçar o start com proxy.
 
 ### Build args
 
