@@ -71,7 +71,15 @@ function shouldProxy(urlPath) {
 
 function proxy(req, res) {
   const headers = { ...req.headers, host: upstream.host }
+  // Hop-by-hop: não repassar — senão body gzip/chunked quebra no segundo Cloudflare
   delete headers['accept-encoding']
+  delete headers['connection']
+  delete headers['keep-alive']
+  delete headers['proxy-connection']
+  delete headers['transfer-encoding']
+  delete headers['te']
+  delete headers['trailer']
+  delete headers['upgrade']
 
   const opts = {
     protocol: upstream.protocol,
@@ -84,7 +92,9 @@ function proxy(req, res) {
   }
 
   const pReq = transport.request(opts, (pRes) => {
-    res.writeHead(pRes.statusCode || 502, pRes.headers)
+    const outHeaders = { ...pRes.headers }
+    delete outHeaders['transfer-encoding']
+    res.writeHead(pRes.statusCode || 502, outHeaders)
     pipeline(pRes, res, () => {})
   })
 
