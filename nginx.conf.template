@@ -1,0 +1,55 @@
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /tmp/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include /etc/nginx/mime.types;
+  default_type application/octet-stream;
+  sendfile on;
+  keepalive_timeout 65;
+  client_max_body_size 64m;
+
+  # DNS para proxy_pass com variável (Coolify / Cloudflare)
+  resolver 1.1.1.1 8.8.8.8 valid=30s ipv6=off;
+
+  server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Agentes nas lojas ainda usam https://salesiq.app.br/api/* (URL do monolito).
+    # Sem este proxy o SPA devolve HTML no GET e 405 no POST → todas ficam offline.
+    location /api/ {
+      set $backend "${BACKEND_UPSTREAM}";
+      proxy_http_version 1.1;
+      proxy_ssl_server_name on;
+      proxy_set_header Host ${BACKEND_HOST};
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Authorization $http_authorization;
+      proxy_pass_request_headers on;
+      proxy_read_timeout 300s;
+      proxy_send_timeout 300s;
+      proxy_request_buffering off;
+      proxy_pass $backend;
+    }
+
+    location = /health {
+      set $backend "${BACKEND_UPSTREAM}";
+      proxy_http_version 1.1;
+      proxy_ssl_server_name on;
+      proxy_set_header Host ${BACKEND_HOST};
+      proxy_pass $backend/health;
+    }
+
+    location / {
+      try_files $uri $uri/ /index.html;
+    }
+  }
+}

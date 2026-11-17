@@ -20,3 +20,9 @@ Auth: JWT em `localStorage` (`salesiq_token`), enviado como `Authorization: Bear
 - `npm run dev` — Vite
 - `npm run build` — typecheck + build de produção
 - `npm run preview` — preview do build
+
+## Produção (Coolify)
+
+Use o **Dockerfile** (nginx + proxy `/api` → backend). Sem esse proxy, os Sync Agents que ainda apontam para `https://salesiq.app.br` ficam offline.
+
+Ver [docs/COOLIFY.md](docs/COOLIFY.md).
